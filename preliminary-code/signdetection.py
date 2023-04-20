@@ -27,13 +27,19 @@ if __name__=='__main__':
     now = time()
     params = cv.SimpleBlobDetector_Params()
     params.filterByArea = True
-    params.minArea = 100
+    params.minArea = 25
     params.filterByColor = True
-    params.blobColor = 0
+    params.blobColor = 255
     detector = cv.SimpleBlobDetector_create(params)
     
-    red_lower = np.array([136, 87, 111], np.uint8)
-    red_upper = np.array([180, 255, 255], np.uint8)
+    red_lower = np.array([160, 100, 100], np.uint8)
+    red_upper = np.array([179, 200, 255], np.uint8)
+
+    #red_lower = np.array([0, 100, 20], np.uint8)
+    #red_upper = np.array([10, 255, 255], np.uint8)
+
+    red_lower2 = np.array([160, 100, 20], np.uint8)
+    red_upper2 = np.array([179, 255, 255], np.uint8)
 
     while True:
         try:
@@ -48,41 +54,17 @@ if __name__=='__main__':
 
             mask = cv.inRange(gray, 60, 255)
             red_mask = cv.inRange(hsvFrame, red_lower, red_upper)
+            red_mask2 = cv.inRange(hsvFrame, red_lower2, red_upper2)
+            full_red_mask = red_mask + red_mask2
+            red_mask_result = cv.bitwise_and(frame, frame, mask=full_red_mask)
 
-            keypoints = detector.detect(frame)
+            keypoints = detector.detect(red_mask)
             
             blank = np.zeros((1, 1))
             blobs = cv.drawKeypoints(frame, keypoints, blank, (0, 0, 255), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
             
             number_of_blobs = len(keypoints)
-            text = "Number of Circular Blobs: " + str(len(keypoints))
-            cv.putText(blobs, text, (20, 550), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 100, 255), 2)
-            if (len(keypoints) > 0): # if blob is seen
-                x = keypoints[0].pt[0]
-                if x < frame_width/3: #on left 1/3
-                    print("Exists in left 1/3 of frame")
-                    #GPIO.output(red_led, GPIO.HIGH)
-                    #GPIO.output(green_led, GPIO.LOW)
-                    #GPIO.output(blue_led, GPIO.LOW)
-
-                elif x > (frame_width/3) * 2: #on right 1/3
-                    print("Exists in right 1/3 of frame")
-                    #GPIO.output(green_led, GPIO.HIGH)
-                    #GPIO.output(red_led, GPIO.LOW)
-                    #GPIO.output(blue_led, GPIO.LOW)
-
-                else: #on middle 1/3
-                    print("Exists in middle 1/3 of frame")
-                    #GPIO.output(blue_led, GPIO.HIGH)
-                    #GPIO.output(red_led, GPIO.LOW)
-                    #GPIO.output(green_led, GPIO.LOW)
-
-                print(number_of_blobs, "blob(s) detected")
-            else:
-                print("white")
-                #GPIO.output(red_led, GPIO.LOW)
-                #GPIO.output(green_led, GPIO.LOW)
-                #GPIO.output(blue_led, GPIO.LOW)
+            print(number_of_blobs)
 
             cv.imshow('Blobs', blobs)
             cv.imshow('Red', red_mask)
