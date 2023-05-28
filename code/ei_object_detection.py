@@ -1,34 +1,12 @@
 # Edge Impulse - OpenMV Object Detection Example
 
 import sensor, image, time, os, tf, math, uos, gc
-from pyb import UART
-from pyb import LED
-from pyb import Pin, Timer
 
 sensor.reset()                         # Reset and initialize the sensor.
 sensor.set_pixformat(sensor.RGB565)    # Set pixel format to RGB565 (or GRAYSCALE)
 sensor.set_framesize(sensor.QVGA)      # Set frame size to QVGA (320x240)
 sensor.set_windowing((240, 240))       # Set 240x240 window.
 sensor.skip_frames(time=2000)          # Let the camera adjust.
-
-#UART Setup
-uart = UART(1, 115200)
-uart.init(115200, bits = 8, parity=None, stop=1, flow=0)
-
-in1 = 'x'
-prev_in = 'x'
-
-#set up pins
-pin8 = Pin('P8', Pin.OUT_PP) #stop
-pin9 = Pin('P9', Pin.OUT_PP) #red lights
-
-#initialize as 0
-pin8.value(0)
-pin9.value(0)
-
-#delay 5 timer
-def delay_five():
-
 
 net = None
 labels = None
@@ -61,7 +39,6 @@ while(True):
 
     img = sensor.snapshot()
 
-
     # detect() returns all objects found in the image (splitted out per class already)
     # we skip class index 0, as that is the background, and then draw circles of the center
     # of our objects
@@ -69,24 +46,13 @@ while(True):
     for i, detection_list in enumerate(net.detect(img, thresholds=[(math.ceil(min_confidence * 255), 255)])):
         if (i == 0): continue # background class
         if (len(detection_list) == 0): continue # no detections for this class?
-        #print("********** %s **********" % labels[i])
 
-        if(labels[i] == "stop_sign"):
-            #set pin 8 to 1 to enable stop
-            pin8.value(1)
-
-            pin8.value(0)
-
-            # we still need to think about delayign 5 seconds before we
-            # check again so we dont see the stop sign again
-
-            print("0")
-
+        print("********** %s **********" % labels[i])
         for d in detection_list:
             [x, y, w, h] = d.rect()
             center_x = math.floor(x + (w / 2))
             center_y = math.floor(y + (h / 2))
-            #print('x %d\ty %d' % (center_x, center_y))
+            print('x %d\ty %d' % (center_x, center_y))
             img.draw_circle((center_x, center_y, 12), color=colors[i], thickness=2)
 
     print(clock.fps(), "fps", end="\n\n")
